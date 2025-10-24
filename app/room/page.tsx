@@ -4,8 +4,11 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Zap, AlertTriangle, X, Target } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { SDGPanel } from "@/components/sdg-panel"
 import { UserTasks } from "@/components/user-tasks"
+import { VoiceControl } from "@/components/voice-control"
+import { UsageInfoModal } from "@/components/usage-info-modal"
 
 interface Device {
   id: string
@@ -36,6 +39,8 @@ export default function RoomView() {
       size: { w: "90px", h: "70px" },
     },
   ])
+
+  const router = useRouter()
 
   // Sync with localStorage
   useEffect(() => {
@@ -144,6 +149,9 @@ export default function RoomView() {
   })
 
   const [totalWattage, setTotalWattage] = useState(0)
+  const [showUsageModal, setShowUsageModal] = useState(false)
+  const [monthlyCost, setMonthlyCost] = useState(0)
+  const [co2Impact, setCo2Impact] = useState(0)
 
   useEffect(() => {
     const deviceWattages: Record<string, number> = {
@@ -167,6 +175,10 @@ export default function RoomView() {
 
     setTotalWattage(total)
 
+    const monthlyKwh = (total / 1000) * 24 * 30
+    setMonthlyCost(Math.round(monthlyKwh * 0.12 * 100) / 100)
+    setCo2Impact(Math.round(monthlyKwh * 0.92 * 10) / 10)
+
     if (total >= 1500) {
       setNotification({
         show: true,
@@ -183,6 +195,62 @@ export default function RoomView() {
       setNotification({ show: false, level: null, message: "" })
     }
   }, [devices])
+
+  const handleVoiceCommand = (command: string, action: string, target?: string) => {
+    console.log("[v0] Voice command received:", { command, action, target })
+
+    switch (action) {
+      case "turn_on":
+        if (target) {
+          const device = devices.find((d) => d.id === target)
+          if (device && device.status === "off") {
+            toggleDevice(target)
+          } else if (device && device.status === "on") {
+            console.log("[v0] Device is already on:", device.name)
+          }
+        }
+        break
+      case "turn_off":
+        if (target) {
+          const device = devices.find((d) => d.id === target)
+          if (device && device.status === "on") {
+            toggleDevice(target)
+          } else if (device && device.status === "off") {
+            console.log("[v0] Device is already off:", device.name)
+          }
+        }
+        break
+      case "turn_off_all":
+        setDevices((prev) => {
+          const updated = prev.map((device) => {
+            if (device.status === "on" && device.id !== "5" && device.id !== "7") {
+              return { ...device, status: "off" as const }
+            }
+            return device
+          })
+
+          const states = updated.reduce(
+            (acc, device) => {
+              acc[device.id] = device.status
+              return acc
+            },
+            {} as Record<string, string>,
+          )
+          localStorage.setItem("deviceStates", JSON.stringify(states))
+
+          return updated
+        })
+        break
+      case "query_usage":
+        setShowUsageModal(true)
+        break
+      case "navigate":
+        if (target === "dashboard") router.push("/")
+        else if (target === "insights") router.push("/insights")
+        else if (target === "room") router.push("/room")
+        break
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8">
@@ -321,6 +389,9 @@ export default function RoomView() {
           </div>
         </div>
 
+        {/* Voice Control */}
+        <VoiceControl onCommand={handleVoiceCommand} />
+
         {/* SDG Panel and User Tasks */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SDGPanel kwhUsed={(totalWattage / 1000) * 24} co2Saved={(totalWattage / 1000) * 24 * 30 * 0.92} />
@@ -338,6 +409,15 @@ export default function RoomView() {
           </ul>
         </div>
       </div>
+
+      {/* Usage Info Modal */}
+      <UsageInfoModal
+        isOpen={showUsageModal}
+        onClose={() => setShowUsageModal(false)}
+        currentUsage={totalWattage}
+        monthlyCost={monthlyCost}
+        co2Impact={co2Impact}
+      />
     </div>
   )
 }
