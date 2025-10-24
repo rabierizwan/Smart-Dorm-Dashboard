@@ -18,6 +18,21 @@ interface Device {
   size: { w: string; h: string }
 }
 
+const DEVICE_WATTAGES: Record<string, number> = {
+  "1": 60,
+  "2": 15,
+  "3": 65,
+  "4": 35,
+  "5": 100,
+  "6": 1500,
+  "7": 12,
+  "8": 5,
+  "9": 2400,
+  "10": 350,
+  "11": 1800,
+  "12": 1200,
+}
+
 export default function RoomView() {
   const [devices, setDevices] = useState<Device[]>([
     { id: "1", name: "Ceiling Lights", status: "on", position: { x: "50%", y: "8%" }, size: { w: "80px", h: "80px" } },
@@ -56,22 +71,40 @@ export default function RoomView() {
     }
   }, [])
 
+  const persistDeviceStates = (list: Device[]) => {
+    const states = list.reduce(
+      (acc, device) => {
+        acc[device.id] = device.status
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+    localStorage.setItem("deviceStates", JSON.stringify(states))
+  }
+
+  const setDeviceStatus = (id: string, status: "on" | "off") => {
+    setDevices((prev) => {
+      let changed = false
+      const updated = prev.map((device) => {
+        if (device.id !== id) return device
+        if (device.status === status) return device
+        changed = true
+        return { ...device, status }
+      })
+
+      if (!changed) return prev
+
+      persistDeviceStates(updated)
+      return updated
+    })
+  }
+
   const toggleDevice = (id: string) => {
     setDevices((prev) => {
       const updated = prev.map((device) =>
         device.id === id ? { ...device, status: device.status === "on" ? "off" : "on" } : device,
       )
-
-      // Save to localStorage
-      const states = updated.reduce(
-        (acc, device) => {
-          acc[device.id] = device.status
-          return acc
-        },
-        {} as Record<string, string>,
-      )
-      localStorage.setItem("deviceStates", JSON.stringify(states))
-
+      persistDeviceStates(updated)
       return updated
     })
   }
@@ -154,23 +187,8 @@ export default function RoomView() {
   const [co2Impact, setCo2Impact] = useState(0)
 
   useEffect(() => {
-    const deviceWattages: Record<string, number> = {
-      "1": 60,
-      "2": 15,
-      "3": 65,
-      "4": 35,
-      "5": 100,
-      "6": 1500,
-      "7": 12,
-      "8": 5,
-      "9": 2400,
-      "10": 350,
-      "11": 1800,
-      "12": 1200,
-    }
-
     const total = devices.reduce((sum, device) => {
-      return sum + (device.status === "on" ? deviceWattages[device.id] || 0 : 0)
+      return sum + (device.status === "on" ? DEVICE_WATTAGES[device.id] || 0 : 0)
     }, 0)
 
     setTotalWattage(total)
@@ -203,21 +221,19 @@ export default function RoomView() {
       case "turn_on":
         if (target) {
           const device = devices.find((d) => d.id === target)
-          if (device && device.status === "off") {
-            toggleDevice(target)
-          } else if (device && device.status === "on") {
+          if (device && device.status === "on") {
             console.log("[v0] Device is already on:", device.name)
           }
+          setDeviceStatus(target, "on")
         }
         break
       case "turn_off":
         if (target) {
           const device = devices.find((d) => d.id === target)
-          if (device && device.status === "on") {
-            toggleDevice(target)
-          } else if (device && device.status === "off") {
+          if (device && device.status === "off") {
             console.log("[v0] Device is already off:", device.name)
           }
+          setDeviceStatus(target, "off")
         }
         break
       case "turn_off_all":
@@ -229,25 +245,43 @@ export default function RoomView() {
             return device
           })
 
-          const states = updated.reduce(
-            (acc, device) => {
-              acc[device.id] = device.status
-              return acc
-            },
-            {} as Record<string, string>,
+          persistDeviceStates(updated)
+          return updated
+        })
+        break
+      case "turn_on_all":
+        setDevices((prev) => {
+          const updated = prev.map((device) =>
+            device.status === "off" ? { ...device, status: "on" as const } : device,
           )
-          localStorage.setItem("deviceStates", JSON.stringify(states))
-
+          persistDeviceStates(updated)
           return updated
         })
         break
       case "query_usage":
         setShowUsageModal(true)
         break
+      case "show_energy_hogs": {
+        const topDevices = devices
+          .filter((device) => device.status === "on")
+          .sort((a, b) => (DEVICE_WATTAGES[b.id] || 0) - (DEVICE_WATTAGES[a.id] || 0))
+          .slice(0, 3)
+          .map((device) => `${device.name}: ${DEVICE_WATTAGES[device.id] || 0}W`)
+          .join("\n")
+
+        alert(topDevices ? `Top energy consumers:\n${topDevices}` : "No devices are currently drawing power.")
+        break
+      }
       case "navigate":
         if (target === "dashboard") router.push("/")
         else if (target === "insights") router.push("/insights")
         else if (target === "room") router.push("/room")
+        break
+      case "set_goal":
+        if (target) {
+          localStorage.setItem("energyGoal", target)
+          alert(`Goal set to ${target} kWh per day`)
+        }
         break
     }
   }
