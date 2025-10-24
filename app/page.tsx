@@ -569,16 +569,34 @@ export default function SmartDormDashboard() {
           <UserTasks currentUsage={totalWattage} />
         </div>
 
-        <Card className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 border-green-800/50 backdrop-blur">
+        <Card className="bg-gradient-to-br from-emerald-950/80 via-teal-950/70 to-slate-950/80 border-emerald-900/60 shadow-lg backdrop-blur">
           <CardHeader>
-            <CardTitle className="text-white">💡 Energy Saving Tips</CardTitle>
+            <CardTitle className="text-emerald-200 flex items-center gap-2">
+              💡 <span>Energy Saving Tips</span>
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-slate-300">
-              <li>• Turn off your space heater when leaving the room - it uses 1500W!</li>
-              <li>• Unplug chargers when not in use to eliminate phantom power draw</li>
-              <li>• Use natural light during the day to reduce lighting costs</li>
-              <li>• Your current setup costs ${monthlyCost}/month - small changes add up!</li>
+          <CardContent className="space-y-3 text-emerald-50">
+            <p className="text-sm text-emerald-100/80">
+              Make quick adjustments to cut down on energy waste and keep your monthly bill in check.
+            </p>
+            <ul className="space-y-2 text-sm text-emerald-100">
+              <li className="flex gap-2">
+                <span className="text-emerald-400">•</span>
+                Turn off your space heater when leaving the room – it pulls 1500W.
+              </li>
+              <li className="flex gap-2">
+                <span className="text-emerald-400">•</span>
+                Unplug chargers and idle electronics to eliminate phantom power draw.
+              </li>
+              <li className="flex gap-2">
+                <span className="text-emerald-400">•</span>
+                Take advantage of natural light during the day to reduce lighting costs.
+              </li>
+              <li className="flex gap-2">
+                <span className="text-emerald-400">•</span>
+                Your current setup costs <span className="font-semibold text-emerald-200">${monthlyCost}/month</span> —
+                even small tweaks add up.
+              </li>
             </ul>
           </CardContent>
         </Card>

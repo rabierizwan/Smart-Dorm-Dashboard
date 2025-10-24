@@ -275,7 +275,7 @@ export function VoiceControl({ onCommand }: VoiceControlProps) {
         }
       }
 
-      if (command.includes("set goal")) {
+      if (/\bset\s+(?:my\s+)?goal\b/.test(command)) {
         const numbers = command.match(/\d+/)
         if (numbers) {
           console.log(
@@ -372,23 +372,23 @@ export function VoiceControl({ onCommand }: VoiceControlProps) {
   }
 
   return (
-    <Card className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-purple-800/50 backdrop-blur">
-      <div className="p-4 space-y-4">
+    <Card className="bg-gradient-to-br from-purple-950/80 via-indigo-950/70 to-slate-950/80 border-purple-900/60 shadow-lg backdrop-blur">
+      <div className="p-4 space-y-4 text-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Volume2 className="h-5 w-5 text-purple-400" />
-            <h3 className="text-white font-semibold">Voice Control</h3>
+            <Volume2 className="h-5 w-5 text-purple-300" />
+            <h3 className="text-slate-100 font-semibold">Voice Control</h3>
             {micPermission === "granted" && (
-              <CheckCircle className="h-4 w-4 text-green-400" title="Microphone access granted" />
+              <CheckCircle className="h-4 w-4 text-emerald-300" title="Microphone access granted" />
             )}
             {micPermission === "denied" && (
-              <AlertCircle className="h-4 w-4 text-red-400" title="Microphone access denied" />
+              <AlertCircle className="h-4 w-4 text-rose-400" title="Microphone access denied" />
             )}
           </div>
           <Button
             onClick={toggleListening}
             className={`${
-              isListening ? "bg-red-600 hover:bg-red-700 animate-pulse" : "bg-purple-600 hover:bg-purple-700"
+              isListening ? "bg-rose-600 hover:bg-rose-700 animate-pulse" : "bg-purple-600 hover:bg-purple-700"
             }`}
             size="sm"
           >
@@ -407,12 +407,12 @@ export function VoiceControl({ onCommand }: VoiceControlProps) {
         </div>
 
         {micPermission === "denied" && (
-          <div className="bg-red-500/20 border border-red-500/40 rounded-lg p-3">
+          <div className="bg-rose-950/60 border border-rose-700/60 rounded-lg p-3">
             <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-rose-300 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-red-200 text-sm font-semibold mb-1">Microphone Access Required</p>
-                <p className="text-red-200/80 text-xs">
+                <p className="text-rose-100 text-sm font-semibold mb-1">Microphone Access Required</p>
+                <p className="text-rose-200/80 text-xs">
                   Please allow microphone access in your browser settings to use voice control. Click the lock icon in
                   the address bar and enable microphone permissions.
                 </p>
@@ -422,8 +422,8 @@ export function VoiceControl({ onCommand }: VoiceControlProps) {
         )}
 
         {isListening && (
-          <div className="bg-purple-500/20 border border-purple-500/40 rounded-lg p-3 animate-pulse">
-            <p className="text-purple-200 text-sm flex items-center gap-2">
+          <div className="bg-purple-900/60 border border-purple-700/60 rounded-lg p-3 animate-pulse">
+            <p className="text-purple-100 text-sm flex items-center gap-2">
               <Mic className="h-4 w-4" />
               Listening... Speak now
             </p>
@@ -431,21 +431,21 @@ export function VoiceControl({ onCommand }: VoiceControlProps) {
         )}
 
         {transcript && (
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
+          <div className="bg-slate-950/60 border border-slate-800/80 rounded-lg p-3">
             <p className="text-xs text-slate-400 mb-1">You said:</p>
-            <p className="text-white text-sm">{transcript}</p>
+            <p className="text-slate-100 text-sm">{transcript}</p>
           </div>
         )}
 
         {feedback && (
-          <div className="bg-blue-500/20 border border-blue-500/40 rounded-lg p-3">
-            <p className="text-blue-200 text-sm">{feedback}</p>
+          <div className="bg-indigo-950/50 border border-indigo-700/60 rounded-lg p-3">
+            <p className="text-indigo-100 text-sm">{feedback}</p>
           </div>
         )}
 
-        <div className="bg-slate-800/30 rounded-lg p-3">
-          <p className="text-xs text-slate-400 mb-2">Try saying:</p>
-          <ul className="text-xs text-slate-300 space-y-1">
+        <div className="bg-slate-950/50 rounded-lg p-3 border border-slate-800/70">
+          <p className="text-xs text-slate-300 mb-2">Try saying:</p>
+          <ul className="text-xs text-slate-200 space-y-1">
             <li>• "Turn off the heater"</li>
             <li>• "What's my current usage?"</li>
             <li>• "Go to room view"</li>
@@ -465,7 +465,7 @@ export function VoiceControl({ onCommand }: VoiceControlProps) {
           }}
           className="space-y-2"
         >
-          <label className="block text-xs text-slate-400" htmlFor="manual-command">
+          <label className="block text-xs text-slate-300" htmlFor="manual-command">
             Prefer typing? Enter a command:
           </label>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -474,7 +474,7 @@ export function VoiceControl({ onCommand }: VoiceControlProps) {
               value={manualCommand}
               onChange={(event) => setManualCommand(event.target.value)}
               placeholder='e.g. "turn off heater" or "show energy hogs"'
-              className="bg-slate-900/50 border-purple-800 text-white placeholder:text-slate-500"
+              className="bg-slate-950/70 border-purple-800/70 text-slate-100 placeholder:text-slate-500"
             />
             <Button type="submit" className="bg-purple-600 hover:bg-purple-700 sm:w-32">
               Send

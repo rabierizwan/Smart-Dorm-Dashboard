@@ -45,7 +45,7 @@ export default function InsightsPage() {
   ])
 
   const [currentUsage, setCurrentUsage] = useState(0)
-  const [dailyGoal, setDailyGoal] = useState(5000) // 5 kWh per day default
+  const [dailyGoal, setDailyGoal] = useState(5) // kWh per day
   const [goalInput, setGoalInput] = useState("5")
   const [beforeUsage] = useState(8500) // Simulated "before" usage in Wh
   const [savingsScenarios, setSavingsScenarios] = useState<
@@ -65,6 +65,31 @@ export default function InsightsPage() {
         })),
       )
     }
+  }, [])
+
+  // Load stored goal from localStorage
+  useEffect(() => {
+    const storedGoal = localStorage.getItem("energyGoal")
+    if (storedGoal) {
+      const parsed = Number.parseFloat(storedGoal)
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        setDailyGoal(parsed)
+        setGoalInput(parsed.toString())
+      }
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "energyGoal" && event.newValue) {
+        const parsed = Number.parseFloat(event.newValue)
+        if (!Number.isNaN(parsed) && parsed > 0) {
+          setDailyGoal(parsed)
+          setGoalInput(parsed.toString())
+        }
+      }
+    }
+
+    window.addEventListener("storage", handleStorage)
+    return () => window.removeEventListener("storage", handleStorage)
   }, [])
 
   // Calculate current usage
@@ -102,6 +127,8 @@ export default function InsightsPage() {
     const newGoal = Number.parseFloat(goalInput)
     if (newGoal > 0) {
       setDailyGoal(newGoal)
+      setGoalInput(newGoal.toString())
+      localStorage.setItem("energyGoal", newGoal.toString())
     }
   }
 
